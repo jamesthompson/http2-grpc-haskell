@@ -10,7 +10,7 @@ http2_grpc_haskell_workspace_deps()
 # Configure rules_haskell and the GHC toolchain
 
 ghc_version = "8.6.5"
-stackage_snapshot = "nightly-2020-02-23"
+stackage_snapshot = "lts-15.3"
 
 load("@rules_haskell//haskell:repositories.bzl", "rules_haskell_dependencies")
 rules_haskell_dependencies()
