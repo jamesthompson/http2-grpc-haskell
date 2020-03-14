@@ -1,0 +1,21 @@
+load("@rules_haskell//haskell:defs.bzl", "haskell_library")
+
+haskell_library(
+  name = "warp_grpc",
+  srcs = glob(["src/**/*.hs"]),
+  version = "0.3.0.0",
+  deps = [
+    "//http2-grpc-types:http2_grpc_types",
+    "@http2//:http2",
+    "@stackage//:async",
+    "@stackage//:base",
+    "@stackage//:binary",
+    "@stackage//:bytestring",
+    "@stackage//:case-insensitive",
+    "@stackage//:http-types",
+    "@stackage//:wai",
+    "@stackage//:warp",
+    "@stackage//:warp-tls",
+  ],
+  visibility = ["//visibility:public"],
+)

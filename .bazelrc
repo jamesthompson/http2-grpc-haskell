@@ -1,0 +1,5 @@
+common --experimental_allow_incremental_repository_updates
+build --incompatible_use_python_toolchains=true --symlink_prefix=.dist/ --
+test --test_env=LANG=C.UTF-8 --test_env=LOCALE_ARCHIVE --test_output=all
+
+try-import .bazelrc.local

@@ -1,0 +1,17 @@
+load("@rules_haskell//haskell:defs.bzl", "haskell_library")
+
+haskell_library(
+  name = "http2_grpc_proto_lens",
+  srcs = glob(["src/**/*.hs"]),
+  version = "0.1.0.0",
+  deps = [
+    "//http2-grpc-types:http2_grpc_types",
+    "@stackage//:base",
+    "@stackage//:binary",
+    "@stackage//:bytestring",
+    "@stackage//:case-insensitive",
+    "@stackage//:proto-lens",
+    "@stackage//:zlib",
+  ],
+  visibility = ["//visibility:public"],
+)

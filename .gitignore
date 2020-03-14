@@ -2,3 +2,6 @@ dist/
 stack*.yaml.lock
 .stack-work/
 *~
+.dist/
+/bazel-out
+/.bazelrc.local
