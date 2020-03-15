@@ -1,15 +1,20 @@
 load("@rules_haskell//haskell:defs.bzl", "haskell_library")
 
 haskell_library(
-  name = "http2_grpc_types",
+  name = "grpc_server",
   srcs = glob(["src/**/*.hs"]),
-  version = "0.5.0.0",
   deps = [
+    "//grpc-types:grpc_types",
+    "@http2//:http2",
+    "@stackage//:async",
     "@stackage//:base",
     "@stackage//:binary",
     "@stackage//:bytestring",
     "@stackage//:case-insensitive",
-    "@stackage//:zlib",
+    "@stackage//:http-types",
+    "@stackage//:wai",
+    "@stackage//:warp",
+    "@stackage//:warp-tls",
   ],
   visibility = ["//visibility:public"],
 )

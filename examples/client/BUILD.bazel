@@ -5,9 +5,9 @@ haskell_library(
   srcs = [ "GrpcClientExample.hs" ],
   deps = [
     "//examples/proto:example_haskell_proto",
-    "//http2-client-grpc:http2_client_grpc",
-    "//http2-grpc-types:http2_grpc_types",
-    "//http2-grpc-proto-lens:http2_grpc_proto_lens",
+    "//grpc-client:grpc_client",
+    "//grpc-types:grpc_types",
+    "//grpc-proto-lens:grpc_proto_lens",
     "@http2-client//:http2-client",
     "@stackage//:base",
     "@stackage//:proto-lens",

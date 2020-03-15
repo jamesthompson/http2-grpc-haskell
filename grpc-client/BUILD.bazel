@@ -1,21 +1,22 @@
 load("@rules_haskell//haskell:defs.bzl", "haskell_library")
 
 haskell_library(
-  name = "warp_grpc",
+  name = "grpc_client",
   srcs = glob(["src/**/*.hs"]),
-  version = "0.3.0.0",
   deps = [
-    "//http2-grpc-types:http2_grpc_types",
+    "//grpc-types:grpc_types",
+    "@http2-client//:http2-client",
     "@http2//:http2",
     "@stackage//:async",
     "@stackage//:base",
     "@stackage//:binary",
     "@stackage//:bytestring",
     "@stackage//:case-insensitive",
-    "@stackage//:http-types",
-    "@stackage//:wai",
-    "@stackage//:warp",
-    "@stackage//:warp-tls",
+    "@stackage//:data-default-class",
+    "@stackage//:lifted-async",
+    "@stackage//:lifted-base",
+    "@stackage//:text",
+    "@stackage//:tls",
   ],
   visibility = ["//visibility:public"],
 )

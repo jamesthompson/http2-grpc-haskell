@@ -1,7 +1,6 @@
-# haskell-grpc-native
+# http2-grpc-haskell
 
-This organization and repository aim at providing unofficial
-[gRPC](https://grpc.io/) implementations for Haskell using native libraries.
+This organization and repository aim at providing unofficial [gRPC](https://grpc.io/) implementations for Haskell using native libraries.
 
 ## Context
 
@@ -12,7 +11,7 @@ the packages reasonably easy to install and easy to tinker with.
 
 ## Repo organization
 
-The code is split in a number of packages following this three ideas:
+The code is split in a number of packages following these three ideas:
 
 - share a common types packages
 - have server and client-specific packages
@@ -32,10 +31,10 @@ bazel query //...
 
 Current build targets of interest include:
 
-- [`//http2-grpc-types:http2_grpc_types`](http2-grpc-types/BUILD.bazel)
-- [`//http2-grpc-proto-lens:http2_grpc_proto_lens`](http2-grpc-proto-lens/BUILD.bazel)
-- [`//http2-client-grpc:http2_client_grpc`](http2-client-grpc/BUILD.bazel)
-- [`//warp-grpc:warp_grpc`](warp-grpc/BUILD.bazel)
+- [`//grpc-types:grpc_types`](grpc-types/BUILD.bazel) with core grpc-relevant datatypes and typeclass definitions
+- [`//grpc-proto-lens:grpc_proto_lens`](grpc-proto-lens/BUILD.bazel) with proto-lens specific typeclasses and instances
+- [`//grpc-client:grpc_client`](grpc-client/BUILD.bazel) with client code for making gRPC requests
+- [`//grpc-server:grpc_server`](grpc-server/BUILD.bazel) with server code for serving gRPC endpoints
 
 you can build all the targets, which cold should take on the order of 5 mins or so, with:
 
