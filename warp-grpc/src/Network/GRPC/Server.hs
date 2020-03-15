@@ -1,10 +1,3 @@
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module Network.GRPC.Server
   ( runGrpcOnPort,
     runGrpcWithSettings,
@@ -43,11 +36,44 @@ where
 
 import Control.Exception (throwIO)
 import Network.GRPC.HTTP2.Encoding (Compression)
-import Network.GRPC.HTTP2.Types (GRPCStatus (..), GRPCStatusCode (..), GRPCStatusMessage)
-import Network.GRPC.Server.Handlers (BiDiStep (..), BiDiStream (..), BiDiStreamHandler, ClientStream (..), ClientStreamHandler, GeneralStreamHandler, IncomingStream (..), OutgoingStream (..), ServerStream (..), ServerStreamHandler, UnaryHandler, bidiStream, clientStream, generalStream, serverStream, unary)
-import Network.GRPC.Server.Wai (ServiceHandler (..), grpcApp, grpcService)
-import Network.Wai.Handler.Warp (Port, Settings, run, runSettings)
-import Network.Wai.Handler.WarpTLS (TLSSettings, runTLS)
+import Network.GRPC.HTTP2.Types
+  ( GRPCStatus (..),
+    GRPCStatusCode (..),
+    GRPCStatusMessage,
+  )
+import Network.GRPC.Server.Handlers
+  ( BiDiStep (..),
+    BiDiStream (..),
+    BiDiStreamHandler,
+    ClientStream (..),
+    ClientStreamHandler,
+    GeneralStreamHandler,
+    IncomingStream (..),
+    OutgoingStream (..),
+    ServerStream (..),
+    ServerStreamHandler,
+    UnaryHandler,
+    bidiStream,
+    clientStream,
+    generalStream,
+    serverStream,
+    unary,
+  )
+import Network.GRPC.Server.Wai
+  ( ServiceHandler (..),
+    grpcApp,
+    grpcService,
+  )
+import Network.Wai.Handler.Warp
+  ( Port,
+    Settings,
+    run,
+    runSettings,
+  )
+import Network.Wai.Handler.WarpTLS
+  ( TLSSettings,
+    runTLS,
+  )
 
 -- * Helpers to constructs and serve a gRPC over HTTP2 application.
 

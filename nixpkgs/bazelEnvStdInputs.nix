@@ -8,7 +8,7 @@ with pkgs;
     bazel
     binutils
     cacert
-    file
+    fd
     ghcid
     git
     go

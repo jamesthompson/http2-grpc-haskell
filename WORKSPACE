@@ -15,7 +15,11 @@ stackage_snapshot = "lts-15.3"
 load("@rules_haskell//haskell:repositories.bzl", "rules_haskell_dependencies")
 rules_haskell_dependencies()
 load("@rules_haskell//haskell:nixpkgs.bzl", "haskell_register_ghc_nixpkgs")
-haskell_register_ghc_nixpkgs(repository = "@rules_haskell//nixpkgs:default.nix", version = ghc_version)
+haskell_register_ghc_nixpkgs(
+  repository = "@rules_haskell//nixpkgs:default.nix",
+  version = ghc_version,
+  compiler_flags = ["-Wall"],
+)
 load("@rules_haskell//haskell:toolchain.bzl", "rules_haskell_toolchains")
 rules_haskell_toolchains(version = ghc_version)
 load("@rules_haskell//tools:repositories.bzl", "rules_haskell_worker_dependencies")

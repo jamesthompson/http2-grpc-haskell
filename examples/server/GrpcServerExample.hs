@@ -10,7 +10,6 @@ import Lens.Family2
 import Network.GRPC.HTTP2.Encoding (gzip)
 import Network.GRPC.HTTP2.ProtoLens (RPC (..))
 import Network.GRPC.Server
-import Network.Wai.Handler.Warp (defaultSettings)
 import Proto.Examples.Proto.Example
 import Proto.Examples.Proto.Example_Fields
 
@@ -23,6 +22,6 @@ handlers =
   [unary (RPC :: RPC Example "get") handleGet]
 
 handleGet :: UnaryHandler EmptyMessage IntegerResponse
-handleGet req emptyMsg = do
+handleGet _ _ = do
   liftIO $ putStrLn "Handling inbound get request, sending back response"
   pure $ defMessage & myInteger .~ 3142
