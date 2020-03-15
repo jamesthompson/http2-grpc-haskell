@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package examples.proto.example;
+
+service Example {
+  rpc Get(EmptyMessage) returns (IntegerResponse) {}
+}
+
+message EmptyMessage {}
+
+message IntegerResponse {
+  int32 my_integer = 1;
+}

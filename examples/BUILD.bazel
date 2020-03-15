@@ -1,0 +1,18 @@
+load("@rules_haskell//haskell:defs.bzl", "haskell_binary")
+
+haskell_binary(
+  name = "example_grpc_bin",
+  srcs = [ "Main.hs" ],
+  compiler_flags = [
+    "-threaded",
+    "-rtsopts",
+    "-with-rtsopts=-N",
+  ],
+  deps = [
+    "//examples/client:example_client_lib",
+    "//examples/server:example_server_lib",
+    "@stackage//:base",
+    "@stackage//:async",
+  ],
+  visibility = ["//visibility:public"],
+)

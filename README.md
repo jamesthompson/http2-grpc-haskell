@@ -51,8 +51,17 @@ bazel run //http2-client-grpc:http2_client_grpc@repl
 
 ## Usage
 
-We will soon provide examples in this repository. We are currently migrating
-repositories from scattered places into this organization.
+A basic example end-to-end setup is given in the [`examples`](examples/BUILD.bazel) package.
+
+In here you can find a [`proto`](examples/proto/BUILD.bazel) spec for a basic unary gRPC method, along with [`client`](examples/client/BUILD.bazel) and [`server`](examples/server/BUILD.bazel) libraries making use of generated haskell proto-lens code.
+
+Specified in the [`examples BUILD file`](examples/BUILD.bazel), you can find a binary demonstrating these library's usage in the build target `example_grpc_bin`.
+
+You can run the binary from the nix-shell (which requires PORT=3000 on the localhost interface to be free) with:
+
+```sh
+bazel run //examples:example_grpc_bin
+```
 
 ## Alternatives
 

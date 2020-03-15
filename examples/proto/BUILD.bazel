@@ -1,0 +1,16 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_haskell//haskell:protobuf.bzl", "haskell_proto_library")
+
+proto_library(
+  name = "example_proto",
+  srcs = [ "example.proto" ],
+  visibility = ["//visibility:private"],
+)
+
+# Build a haskell proto library for the example proto spec using rules_haskell and proto-lens
+haskell_proto_library(
+  name = "example_haskell_proto",
+  tags = [ "requires_proto" ],
+  deps = [ ":example_proto" ],
+  visibility = ["//visibility:public"],
+)
