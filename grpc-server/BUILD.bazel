@@ -12,6 +12,7 @@ haskell_library(
     "@stackage//:bytestring",
     "@stackage//:case-insensitive",
     "@stackage//:http-types",
+    "@stackage//:unordered-containers",
     "@stackage//:wai",
     "@stackage//:warp",
     "@stackage//:warp-tls",

@@ -29,7 +29,8 @@ import Data.Binary.Builder (Builder, toLazyByteString)
 import Data.Binary.Get (Decoder (..), Get)
 import Data.ByteString.Char8 (ByteString)
 import Data.ByteString.Lazy (fromStrict, toStrict)
-import Network.GRPC.HTTP2.Types
+import Network.GRPC.HTTP2.Api (IsRPC)
+import Network.GRPC.HTTP2.Types (HeaderValue)
 
 class IsRPC r => GRPCInput r i where
   encodeInput :: r -> Compression -> i -> Builder

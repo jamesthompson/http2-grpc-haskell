@@ -17,9 +17,11 @@ runExampleServer :: IO ()
 runExampleServer =
   runGrpcOnPort 3000 handlers [gzip]
 
-handlers :: [ServiceHandler]
+handlers :: ServiceHandler
 handlers =
-  [unary (RPC :: RPC Example "get") handleGet]
+  assembleServiceHandlers
+    [ unary (RPC :: RPC Example "get") handleGet
+    ]
 
 handleGet :: UnaryHandler EmptyMessage IntegerResponse
 handleGet _ _ = do

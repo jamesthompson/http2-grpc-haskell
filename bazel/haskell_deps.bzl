@@ -46,6 +46,7 @@ def define_stackage_dependencies(stackage_snapshot):
       "tls",
       "transformers-base",
       "unix",
+      "unordered-containers",
       "vector",
       "wai",
       "warp",

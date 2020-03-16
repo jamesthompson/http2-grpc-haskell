@@ -1,45 +1,65 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Module for GRPC <> HTTP2 mapping.
+-- * Module for GRPC <> HTTP2 type mappings
 module Network.GRPC.HTTP2.Types where
 
 import Control.Exception (Exception)
 import Data.ByteString.Char8 (ByteString)
-import qualified Data.ByteString.Char8 as ByteString
+import qualified Data.ByteString.Char8 as BC8
 import Data.CaseInsensitive (CI)
 import Data.Maybe (fromMaybe)
 
--- | HTTP2 Header Key.
+-- * Canonical gRPC Header Keys -------------------------------------------------
+
+-- | HTTP2 header key type
 type HeaderKey = CI ByteString
 
--- | HTTP2 Header Value.
-type HeaderValue = ByteString
-
+-- | grpc-timeout header key
 grpcTimeoutH :: HeaderKey
 grpcTimeoutH = "grpc-timeout"
 
+-- | grpc-encoding header key
 grpcEncodingH :: HeaderKey
 grpcEncodingH = "grpc-encoding"
 
+-- | grpc-accept-encoding header key
 grpcAcceptEncodingH :: HeaderKey
 grpcAcceptEncodingH = "grpc-accept-encoding"
 
-grpcAcceptEncodingHVdefault :: HeaderValue
-grpcAcceptEncodingHVdefault = "identity"
-
+-- | grpc-status header key
 grpcStatusH :: HeaderKey
 grpcStatusH = "grpc-status"
 
+-- | grpc-message header key
 grpcMessageH :: HeaderKey
 grpcMessageH = "grpc-message"
 
+-- | Helper for common authorization header
+authorizationH :: HeaderKey
+authorizationH = "authorization"
+
+-- * Canonical gRPC Header Values -----------------------------------------------
+
+-- | HTTP2 header value type
+type HeaderValue = ByteString
+
+-- | grpc-accept-encoding default header value
+grpcAcceptEncodingHVdefault :: HeaderValue
+grpcAcceptEncodingHVdefault = "identity"
+
+-- | Established gRPC content-type header value
 grpcContentTypeHV :: HeaderValue
 grpcContentTypeHV = "application/grpc+proto"
 
--- https://grpc.io/grpc/core/impl_2codegen_2status_8h.html#a35ab2a68917eb836de84cb23253108eb
+-- | Helper for common Bearer style header token values
+makeBearerHV :: ByteString -> HeaderValue
+makeBearerHV = (<>) "Bearer "
+
+-- * Canonical gRPC Header Values -----------------------------------------------
+
+-- | Possible gRPC response status codes (mapped from inbound integer values as a header key)
+--   https://grpc.io/grpc/core/impl_2codegen_2status_8h.html#a35ab2a68917eb836de84cb23253108eb
 data GRPCStatusCode
   = OK
   | CANCELLED
@@ -58,9 +78,32 @@ data GRPCStatusCode
   | INTERNAL
   | UNAVAILABLE
   | DATA_LOSS
-  deriving (Show, Eq, Ord)
+  deriving (Bounded, Eq, Ord, Show)
 
-trailerForStatusCode :: GRPCStatusCode -> HeaderValue
+-- | A gRPC status message represented by a header value
+type GRPCStatusMessage = HeaderValue
+
+-- | A gRPC status header mapping a code to a message
+data GRPCStatus = GRPCStatus !GRPCStatusCode !GRPCStatusMessage
+  deriving (Eq, Ord, Show)
+
+instance Exception GRPCStatus
+
+-- | Datatype representing an invalid gRPC status response code and value
+--   (really one not-understood by this library, could be an addition to the spec!)
+newtype InvalidGRPCStatus
+  = InvalidGRPCStatus [(HeaderKey, HeaderValue)]
+  deriving (Eq, Ord, Show)
+
+instance Exception InvalidGRPCStatus
+
+-- | The HTTP2-Authority portion of an URL (e.g., "dicioccio.fr:7777").
+type Authority = HeaderValue
+
+-- | Map an enumerated gRPC status code to its integer wire header representation
+trailerForStatusCode ::
+  GRPCStatusCode ->
+  HeaderValue
 trailerForStatusCode = \case
   OK ->
     "0"
@@ -97,14 +140,10 @@ trailerForStatusCode = \case
   DATA_LOSS ->
     "15"
 
-type GRPCStatusMessage = HeaderValue
-
-data GRPCStatus = GRPCStatus !GRPCStatusCode !GRPCStatusMessage
-  deriving (Show, Eq, Ord)
-
-instance Exception GRPCStatus
-
-statusCodeForTrailer :: HeaderValue -> Maybe GRPCStatusCode
+-- | Map a gRPC header value integer code to an enumerated GRPCStatusCode value
+statusCodeForTrailer ::
+  HeaderValue ->
+  Maybe GRPCStatusCode
 statusCodeForTrailer = \case
   "0" ->
     Just OK
@@ -143,38 +182,39 @@ statusCodeForTrailer = \case
   _ ->
     Nothing
 
--- | Trailers for a GRPCStatus.
-trailers :: GRPCStatus -> [(HeaderKey, HeaderValue)]
+-- | Map a 'GRPCStatus' to wire trailers
+trailers ::
+  GRPCStatus ->
+  [(HeaderKey, HeaderValue)]
 trailers (GRPCStatus s msg) =
-  if ByteString.null msg then [status] else [status, message]
+  if BC8.null msg
+    then [status]
+    else
+      [ status,
+        message
+      ]
   where
     status = (grpcStatusH, trailerForStatusCode s)
     message = (grpcMessageH, msg)
 
--- | In case a server replies with a gRPC status/message pair un-understood by this library.
-newtype InvalidGRPCStatus = InvalidGRPCStatus [(HeaderKey, HeaderValue)]
-  deriving (Show, Eq, Ord)
-
-instance Exception InvalidGRPCStatus
-
--- | Read a 'GRPCStatus' from HTTP2 trailers.
-readTrailers :: [(HeaderKey, HeaderValue)] -> Either InvalidGRPCStatus GRPCStatus
+-- | Read a 'GRPCStatus' from HTTP2 trailers
+readTrailers ::
+  [(HeaderKey, HeaderValue)] ->
+  Either InvalidGRPCStatus GRPCStatus
 readTrailers pairs = maybe (Left $ InvalidGRPCStatus pairs) Right $ do
   status <- statusCodeForTrailer =<< lookup grpcStatusH pairs
   return $ GRPCStatus status message
   where
     message = fromMaybe "" (lookup grpcMessageH pairs)
 
--- |  A class to represent RPC information.
-class IsRPC t where
-  -- | Returns the HTTP2 :path for a given RPC.
-  path :: t -> HeaderValue
+-- * Sundry types ---------------------------------------------------------------
 
--- | Timeout in seconds.
-newtype Timeout = Timeout Int
+-- | Timeout in seconds
+newtype Timeout
+  = Timeout Int
 
-showTimeout :: Timeout -> HeaderValue
-showTimeout (Timeout n) = ByteString.pack $ show n ++ "S"
-
--- | The HTTP2-Authority portion of an URL (e.g., "dicioccio.fr:7777").
-type Authority = HeaderValue
+showTimeout ::
+  Timeout ->
+  HeaderValue
+showTimeout (Timeout n) =
+  BC8.pack $ show n ++ " s"

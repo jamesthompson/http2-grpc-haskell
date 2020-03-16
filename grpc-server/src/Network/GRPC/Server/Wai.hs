@@ -9,8 +9,8 @@ import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as ByteString
 import Data.ByteString.Lazy (fromStrict)
 import qualified Data.CaseInsensitive as CI
+import qualified Data.HashMap.Strict as HM
 import Data.IORef
-import qualified Data.List as List
 import Data.Maybe (fromMaybe)
 import Network.GRPC.HTTP2.Encoding (Compression, Decoding (..), Encoding (..), grpcCompressionHV, uncompressed)
 import Network.GRPC.HTTP2.Types (GRPCStatus (..), GRPCStatusCode (..), grpcAcceptEncodingH, grpcContentTypeHV, grpcEncodingH, grpcMessageH, grpcStatusH)
@@ -20,11 +20,14 @@ import Network.HTTP2.Server (NextTrailersMaker (..))
 import Network.Wai (Application, Request (..), rawPathInfo, requestHeaders, responseLBS, responseStream)
 import Network.Wai.Handler.Warp (defaultHTTP2Data, http2dataTrailers, modifyHTTP2Data)
 
+type ServiceHandler =
+  HM.HashMap ByteString WaiHandler
+
 -- | A Wai Handler for a request.
 type WaiHandler =
-  -- | Compression for the request inputs.
+  -- | Compression for the request input.
   Decoding ->
-  -- | Compression for the request outputs.
+  -- | Compression for the request output.
   Encoding ->
   -- | Request object.
   Request ->
@@ -34,41 +37,37 @@ type WaiHandler =
   IO () ->
   IO ()
 
--- | Untyped gRPC Service handler.
-data ServiceHandler
-  = ServiceHandler
-      { -- | Path to the Service to be handled.
-        grpcHandlerPath :: ByteString,
-        -- | Actual request handler.
-        grpcWaiHandler :: WaiHandler
-      }
-
--- | Build a WAI 'Application' from a list of ServiceHandler.
+-- | Build a WAI 'Application' from a HashMap of ServiceHandlers.
 --
 -- Currently, gRPC calls are lookuped up by traversing the list of ServiceHandler.
--- This lookup may be inefficient for large amount of servics.
-grpcApp :: [Compression] -> [ServiceHandler] -> Application
+-- This lookup may be inefficient for large amount of services.
+grpcApp ::
+  [Compression] ->
+  ServiceHandler ->
+  Application
 grpcApp compressions services =
   grpcService compressions services err404app
   where
     err404app :: Application
     err404app req rep =
-      rep $ responseLBS status404 [] $ fromStrict ("not found: " <> rawPathInfo req)
+      rep
+        $ responseLBS status404 []
+        $ fromStrict ("not found: " <> rawPathInfo req)
 
 -- | Aborts a GRPC handler with a given GRPCStatus.
 closeEarly :: GRPCStatus -> IO a
 closeEarly = throwIO
 
--- | Build a WAI 'Middleware' from a list of ServiceHandler.
---
--- Currently, gRPC calls are lookuped up by traversing the list of ServiceHandler.
--- This lookup may be inefficient for large amount of services.
-grpcService :: [Compression] -> [ServiceHandler] -> (Application -> Application)
+-- | Build a WAI 'Middleware' from a ServiceHandler mapping.
+grpcService ::
+  [Compression] ->
+  ServiceHandler ->
+  (Application -> Application)
 grpcService compressions services app = \req rep -> do
   r <- newIORef []
   modifyHTTP2Data req $ \h2data ->
     Just $! (fromMaybe defaultHTTP2Data h2data) {http2dataTrailers = trailersMaker r}
-  case lookupHandler (rawPathInfo req) services of
+  case HM.lookup (rawPathInfo req) services of
     Just handler ->
       -- Handler that catches early GRPC termination and other exceptions.
       --
@@ -93,18 +92,14 @@ grpcService compressions services app = \req rep -> do
         ("trailer", CI.original grpcStatusH),
         ("trailer", CI.original grpcMessageH)
       ]
-    lookupHandler :: ByteString -> [ServiceHandler] -> Maybe WaiHandler
-    lookupHandler p plainHandlers =
-      grpcWaiHandler
-        <$> List.find (\(ServiceHandler rpcPath _) -> rpcPath == p) plainHandlers
     doHandle r handler req write flush = do
       let bestCompression = lookupEncoding req compressions
       let pickedCompression = fromMaybe (Encoding uncompressed) bestCompression
       let hopefulDecompression = lookupDecoding req compressions
       let pickedDecompression = fromMaybe (Decoding uncompressed) hopefulDecompression
-      putStrLn "running handler"
+      -- putStrLn "running handler"
       _ <- handler pickedDecompression pickedCompression req write flush
-      putStrLn "setting GRPC status"
+      -- putStrLn "setting GRPC status"
       modifyGRPCStatus r req (GRPCStatus OK "WAI handler ended.")
     trailersMaker r Nothing = Trailers <$> readIORef r
     trailersMaker r _ = return $ NextTrailersMaker (trailersMaker r)
@@ -128,7 +123,8 @@ lookupEncoding req compressions =
 
 -- | Looks-up header for decoding incoming messages.
 requestDecodingName :: Request -> Maybe ByteString
-requestDecodingName req = lookup grpcEncodingH (requestHeaders req)
+requestDecodingName req =
+  lookup grpcEncodingH (requestHeaders req)
 
 -- | Looks-up the compression to use for decoding messages.
 lookupDecoding :: Request -> [Compression] -> Maybe Decoding

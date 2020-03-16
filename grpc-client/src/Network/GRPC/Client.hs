@@ -96,6 +96,7 @@ import Data.ByteString.Lazy (toStrict)
 import Data.CaseInsensitive (CI)
 import qualified Data.CaseInsensitive as CI
 import Data.Monoid ((<>))
+import Network.GRPC.HTTP2.Api (IsRPC (..))
 import Network.GRPC.HTTP2.Encoding
 import Network.GRPC.HTTP2.Types
 import Network.HPACK

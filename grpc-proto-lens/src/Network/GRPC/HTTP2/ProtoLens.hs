@@ -15,6 +15,7 @@ import Data.ProtoLens.Message (Message)
 import Data.ProtoLens.Service.Types (HasMethod, HasMethodImpl (..), Service (..))
 import Data.Proxy (Proxy (..))
 import GHC.TypeLits (Symbol, symbolVal)
+import Network.GRPC.HTTP2.Api (IsRPC (..))
 import Network.GRPC.HTTP2.Encoding
 import Network.GRPC.HTTP2.Types
 

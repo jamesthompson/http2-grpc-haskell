@@ -21,6 +21,7 @@ module Network.GRPC.Server
     clientStream,
     bidiStream,
     generalStream,
+    assembleServiceHandlers,
 
     -- * registration
     GRPCStatus (..),
@@ -60,7 +61,7 @@ import Network.GRPC.Server.Handlers
     unary,
   )
 import Network.GRPC.Server.Wai
-  ( ServiceHandler (..),
+  ( ServiceHandler,
     grpcApp,
     grpcService,
   )
@@ -75,13 +76,13 @@ import Network.Wai.Handler.WarpTLS
     runTLS,
   )
 
--- * Helpers to constructs and serve a gRPC over HTTP2 application.
+-- * Helpers to construct and serve gRPC as an HTTP2 Warp application.
 
 runGrpcOnPort ::
   -- | Port
   Port ->
   -- | List of ServiceHandlers. Refer to 'grcpApp'
-  [ServiceHandler] ->
+  ServiceHandler ->
   -- | Compression methods used.
   [Compression] ->
   IO ()
@@ -92,7 +93,7 @@ runGrpcWithSettings ::
   -- | Warp settings.
   Settings ->
   -- | List of ServiceHandler. Refer to 'grcpApp'
-  [ServiceHandler] ->
+  ServiceHandler ->
   -- | Compression methods used.
   [Compression] ->
   IO ()
@@ -105,9 +106,15 @@ runGrpcWithTLS ::
   -- | Warp settings.
   Settings ->
   -- | List of ServiceHandler. Refer to 'grcpApp'
-  [ServiceHandler] ->
+  ServiceHandler ->
   -- | Compression methods used.
   [Compression] ->
   IO ()
 runGrpcWithTLS tlsSettings settings handlers compressions =
   runTLS tlsSettings settings (grpcApp compressions handlers)
+
+assembleServiceHandlers ::
+  [ServiceHandler] ->
+  ServiceHandler
+assembleServiceHandlers =
+  mconcat
