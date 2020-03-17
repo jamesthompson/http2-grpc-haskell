@@ -66,9 +66,9 @@ cc_library(
 
 # Setup haskell library dependencies from stackage, and some http2- extras ------
 
-load("//bazel:haskell_deps.bzl", "define_stackage_dependencies", "define_http2_lib_deps")
-define_stackage_dependencies(stackage_snapshot)
-define_http2_lib_deps()
+load("//bazel:haskell_deps.bzl", "define_http2_grpc_stackage_dependencies", "define_http2_grpc_lib_deps")
+define_http2_grpc_stackage_dependencies(stackage_snapshot)
+define_http2_grpc_lib_deps()
 
 
 # Protobuf Stuff ----------------------------------------------------------------

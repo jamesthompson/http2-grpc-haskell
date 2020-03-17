@@ -4,55 +4,59 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
 load("@rules_haskell//haskell:cabal.bzl", "stack_snapshot")
 
+# Listed stackage packages allowing another workspace using this
+# as a dependency to configure its `stackage` dependency as a superset
+# taking these required packages into account.
+http2_grpc_stackage_packages = [
+  "async",
+  "base",
+  "base",
+  "binary",
+  "bytestring",
+  "case-insensitive",
+  "containers",
+  "data-default-class",
+  "deepseq",
+  "ghc",
+  "ghc-paths",
+  "ghc-source-gen",
+  "http-types",
+  "lens-family",
+  "lens-family-core",
+  "lifted-async",
+  "lifted-base",
+  "mtl",
+  "network-byte-order",
+  "parser-combinators",
+  "pretty",
+  "proto-lens",
+  "proto-lens-protoc",
+  "proto-lens-runtime",
+  "psqueues",
+  "selective",
+  "stm",
+  "text",
+  "time",
+  "time-manager",
+  "tls",
+  "transformers-base",
+  "unix",
+  "unordered-containers",
+  "vector",
+  "wai",
+  "warp",
+  "warp-tls",
+  "zlib",
+]
 
-def define_stackage_dependencies(stackage_snapshot):
-  """ Define stackage-sourced packages
+def define_http2_grpc_stackage_dependencies(stackage_snapshot):
+  """ Define stackage-sourced packages.
   """
 
   stack_snapshot(
     name = "stackage",
     snapshot = stackage_snapshot,
-    packages = [
-      "async",
-      "base",
-      "base",
-      "binary",
-      "bytestring",
-      "case-insensitive",
-      "containers",
-      "data-default-class",
-      "deepseq",
-      "ghc",
-      "ghc-paths",
-      "ghc-source-gen",
-      "http-types",
-      "lens-family",
-      "lens-family-core",
-      "lifted-async",
-      "lifted-base",
-      "mtl",
-      "network-byte-order",
-      "parser-combinators",
-      "pretty",
-      "proto-lens",
-      "proto-lens-protoc",
-      "proto-lens-runtime",
-      "psqueues",
-      "selective",
-      "stm",
-      "text",
-      "time",
-      "time-manager",
-      "tls",
-      "transformers-base",
-      "unix",
-      "unordered-containers",
-      "vector",
-      "wai",
-      "warp",
-      "warp-tls",
-      "zlib",
-     ],
+    packages = http2_grpc_stackage_packages,
      haddock = False,
      extra_deps = {
        "zlib": [
@@ -64,7 +68,7 @@ def define_stackage_dependencies(stackage_snapshot):
      ],
    )
 
-def define_http2_lib_deps():
+def define_http2_grpc_lib_deps():
   """ Define hackage-sourced, cabal-built packages """
 
   http_archive(
