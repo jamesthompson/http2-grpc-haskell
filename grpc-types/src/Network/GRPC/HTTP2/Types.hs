@@ -50,7 +50,7 @@ grpcAcceptEncodingHVdefault = "identity"
 
 -- | Established gRPC content-type header value
 grpcContentTypeHV :: HeaderValue
-grpcContentTypeHV = "application/grpc+proto"
+grpcContentTypeHV = "application/grpc"
 
 -- | Helper for common Bearer style header token values
 makeBearerHV :: ByteString -> HeaderValue
@@ -217,4 +217,4 @@ showTimeout ::
   Timeout ->
   HeaderValue
 showTimeout (Timeout n) =
-  BC8.pack $ show n ++ " s"
+  BC8.pack $ show (n * 1000000) ++ "u"

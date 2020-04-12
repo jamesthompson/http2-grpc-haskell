@@ -83,7 +83,7 @@ data GrpcClientConfig
 
 grpcClientConfigSimple :: HostName -> PortNumber -> UseTlsOrNot -> GrpcClientConfig
 grpcClientConfigSimple host port tls =
-  GrpcClientConfig host port [] (Timeout 3000) gzip (tlsSettings tls host port) (liftIO . throwIO) ignoreFallbackHandler 5000000 1000000
+  GrpcClientConfig host port [] (Timeout 60) gzip (tlsSettings tls host port) (liftIO . throwIO) ignoreFallbackHandler 5000000 1000000
 
 type UseTlsOrNot = Bool
 
