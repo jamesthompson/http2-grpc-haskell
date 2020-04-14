@@ -39,11 +39,13 @@ data GrpcClient
         -- | Authority header of the server the client is connected to.
         _grpcClientAuthority :: Authority,
         -- | Extra HTTP2 headers to pass to every call (e.g., authentication tokens).
-        _grpcClientHeaders :: [(ByteString, ByteString)],
+        _grpcClientHeaders :: ClientIO [(ByteString, ByteString)],
         -- | Timeout for RPCs.
         _grpcClientTimeout :: Timeout,
-        -- | Compression shared for every call and expected for every answer.
-        _grpcClientCompression :: Compression,
+        -- | Compression shared for every request body.
+        _grpcClientRequestCompression :: Compression,
+        -- | Compression shared for every response body.
+        _grpcClientResponseCompression :: Compression,
         -- | Running background tasks.
         _grpcClientBackground :: BackgroundTasks
       }
@@ -64,11 +66,13 @@ data GrpcClientConfig
         -- | Port of the server.
         _grpcClientConfigPort :: !PortNumber,
         -- | Extra HTTP2 headers to pass to every call (e.g., authentication tokens).
-        _grpcClientConfigHeaders :: ![(ByteString, ByteString)],
+        _grpcClientConfigHeaders :: ClientIO [(ByteString, ByteString)],
         -- | Timeout for RPCs.
         _grpcClientConfigTimeout :: !Timeout,
-        -- | Compression shared for every call and expected for every answer.
-        _grpcClientConfigCompression :: !Compression,
+        -- | Compression shared for every request body.
+        _grpcClientConfigRequestCompression :: !Compression,
+        -- | Compression shared for every response body.
+        _grpcClientConfigResponseCompression :: !Compression,
         -- | TLS parameters for the session.
         _grpcClientConfigTLS :: !(Maybe TLS.ClientParams),
         -- | HTTP2 handler for GoAways.
@@ -81,15 +85,36 @@ data GrpcClientConfig
         _grpcClientConfigPingDelay :: Int
       }
 
-grpcClientConfigSimple :: HostName -> PortNumber -> UseTlsOrNot -> GrpcClientConfig
+-- | Simple default client setup with no encoding of requests,
+--   but expected gzip-encoded responses.
+grpcClientConfigSimple ::
+  HostName ->
+  PortNumber ->
+  UseTlsOrNot ->
+  GrpcClientConfig
 grpcClientConfigSimple host port tls =
-  GrpcClientConfig host port [] (Timeout 60) gzip (tlsSettings tls host port) (liftIO . throwIO) ignoreFallbackHandler 5000000 1000000
+  GrpcClientConfig
+    host
+    port
+    (pure [])
+    (Timeout 60)
+    uncompressed
+    gzip
+    (tlsSettings tls host port)
+    (liftIO . throwIO)
+    ignoreFallbackHandler
+    5000000
+    1000000
 
-type UseTlsOrNot = Bool
+data UseTlsOrNot = UseTls | NoTls
 
-tlsSettings :: UseTlsOrNot -> HostName -> PortNumber -> Maybe TLS.ClientParams
-tlsSettings False _ _ = Nothing
-tlsSettings True host port =
+tlsSettings ::
+  UseTlsOrNot ->
+  HostName ->
+  PortNumber ->
+  Maybe TLS.ClientParams
+tlsSettings NoTls _ _ = Nothing
+tlsSettings UseTls host port =
   Just $
     TLS.ClientParams
       { TLS.clientWantSessionResume = Nothing,
@@ -99,7 +124,7 @@ tlsSettings True host port =
         TLS.clientShared = def,
         TLS.clientHooks =
           def
-            { TLS.onServerCertificate = \_ _ _ _ -> return []
+            { TLS.onServerCertificate = \_ _ _ _ -> pure []
             },
         TLS.clientSupported = def {TLS.supportedCiphers = TLS.ciphersuite_default},
         TLS.clientDebug = def,
@@ -111,7 +136,8 @@ setupGrpcClient config = do
   let host = _grpcClientConfigHost config
   let port = _grpcClientConfigPort config
   let tls = _grpcClientConfigTLS config
-  let compression = _grpcClientConfigCompression config
+  let requestCompression = _grpcClientConfigRequestCompression config
+  let responseCompression = _grpcClientConfigResponseCompression config
   let onGoAway = _grpcClientConfigGoAwayHandler config
   let onFallback = _grpcClientConfigFallbackHandler config
   let timeout = _grpcClientConfigTimeout config
@@ -126,7 +152,15 @@ setupGrpcClient config = do
     threadDelay $ _grpcClientConfigPingDelay config
     ping cli 3000000 "grpc.hs"
   let tasks = BackgroundTasks wuAsync pingAsync
-  return $ GrpcClient cli authority headers timeout compression tasks
+  pure $
+    GrpcClient
+      cli
+      authority
+      headers
+      timeout
+      requestCompression
+      responseCompression
+      tasks
 
 -- | Cancels background tasks and closes the underlying HTTP2 client.
 close :: GrpcClient -> ClientIO ()
@@ -145,9 +179,17 @@ rawUnary ::
   -- | The input.
   i ->
   ClientIO (Either TooMuchConcurrency (RawReply o))
-rawUnary rpc (GrpcClient client authority headers timeout compression _) input =
+rawUnary rpc (GrpcClient client authority headers timeout reqCompression respCompression _) input = do
+  hdrs <- headers
   let call = singleRequest rpc input
-   in open client authority headers timeout (Encoding compression) (Decoding compression) call
+  open
+    client
+    authority
+    hdrs
+    timeout
+    (Encoding reqCompression)
+    (Decoding respCompression)
+    call
 
 -- | Calls for a server stream of requests.
 rawStreamServer ::
@@ -164,9 +206,17 @@ rawStreamServer ::
   -- Headers are repeated for convenience but are the same for every iteration.
   (a -> HeaderList -> o -> ClientIO a) ->
   ClientIO (Either TooMuchConcurrency (a, HeaderList, HeaderList))
-rawStreamServer rpc (GrpcClient client authority headers timeout compression _) v0 input handler =
+rawStreamServer rpc (GrpcClient client authority headers timeout reqCompression respCompression _) v0 input handler = do
+  hdrs <- headers
   let call = streamReply rpc v0 input handler
-   in open client authority headers timeout (Encoding compression) (Decoding compression) call
+  open
+    client
+    authority
+    hdrs
+    timeout
+    (Encoding reqCompression)
+    (Decoding respCompression)
+    call
 
 -- | Sends a streams of requests to the server.
 --
@@ -183,9 +233,17 @@ rawStreamClient ::
   -- | A state-passing step function to decide the next message.
   (a -> ClientIO (a, Either StreamDone (CompressMode, i))) ->
   ClientIO (Either TooMuchConcurrency (a, RawReply o))
-rawStreamClient rpc (GrpcClient client authority headers timeout compression _) v0 getNext =
+rawStreamClient rpc (GrpcClient client authority headers timeout reqCompression respCompression _) v0 getNext = do
+  hdrs <- headers
   let call = streamRequest rpc v0 getNext
-   in open client authority headers timeout (Encoding compression) (Decoding compression) call
+  open
+    client
+    authority
+    hdrs
+    timeout
+    (Encoding reqCompression)
+    (Decoding respCompression)
+    call
 
 -- | Starts a bidirectional ping-pong like stream with the server.
 --
@@ -203,9 +261,17 @@ rawSteppedBidirectional ::
   -- | The sequential program to iterate between sending and receiving messages.
   RunBiDiStep i o a ->
   ClientIO (Either TooMuchConcurrency a)
-rawSteppedBidirectional rpc (GrpcClient client authority headers timeout compression _) v0 handler =
+rawSteppedBidirectional rpc (GrpcClient client authority headers timeout reqCompression respCompression _) v0 handler = do
+  hdrs <- headers
   let call = steppedBiDiStream rpc v0 handler
-   in open client authority headers timeout (Encoding compression) (Decoding compression) call
+  open
+    client
+    authority
+    hdrs
+    timeout
+    (Encoding reqCompression)
+    (Decoding respCompression)
+    call
 
 -- | Starts a stream with the server.
 --
@@ -226,6 +292,14 @@ rawGeneralStream ::
   -- | A state-passing function for the ougoing loop.
   (b -> ClientIO (b, OutgoingEvent i b)) ->
   ClientIO (Either TooMuchConcurrency (a, b))
-rawGeneralStream rpc (GrpcClient client authority headers timeout compression _) v0 handler w0 next =
+rawGeneralStream rpc (GrpcClient client authority headers timeout reqCompression respCompression _) v0 handler w0 next = do
+  hdrs <- headers
   let call = generalHandler rpc v0 handler w0 next
-   in open client authority headers timeout (Encoding compression) (Decoding compression) call
+  open
+    client
+    authority
+    hdrs
+    timeout
+    (Encoding reqCompression)
+    (Decoding respCompression)
+    call

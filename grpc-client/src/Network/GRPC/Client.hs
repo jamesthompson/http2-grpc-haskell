@@ -216,12 +216,11 @@ open conn authority extraheaders timeout encoding decoding call = do
           ("content-type", grpcContentTypeHV),
           ("te", "trailers"),
           ("user-agent", "grpc-haskell/0.0.1"),
-          (CI.original grpcAcceptEncodingH, grpcCompressionHV decompress), -- mconcat [grpcAcceptEncodingHVdefault, ",", grpcCompressionHV decompress]),
+          (CI.original grpcEncodingH, grpcCompressionHV compress),
+          (CI.original grpcAcceptEncodingH, mconcat [grpcAcceptEncodingHVdefault, ",", grpcCompressionHV decompress]),
           (CI.original grpcTimeoutH, showTimeout timeout)
-          -- (CI.original grpcEncodingH, grpcCompressionHV compress),
         ]
           <> extraheaders
-  liftIO $ print ("USING HEADERS: " <> show request)
   withHttp2Stream conn $ \stream ->
     let initStream = headers stream request setEndHeader
         handler isfc osfc = runRPC call conn stream isfc osfc encoding decoding
