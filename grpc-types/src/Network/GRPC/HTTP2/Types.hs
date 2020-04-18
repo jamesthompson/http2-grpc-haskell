@@ -1,7 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- * Module for GRPC <> HTTP2 type mappings
+-- |
+-- Module for GRPC <> HTTP2 type mappings
 module Network.GRPC.HTTP2.Types where
 
 import Control.Exception (Exception)
