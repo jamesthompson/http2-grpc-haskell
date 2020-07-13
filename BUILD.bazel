@@ -1,30 +1,29 @@
-package(default_visibility = [ "//visibility:public" ])
-
 load(
-  "@rules_haskell//haskell:protobuf.bzl",
-  "haskell_proto_toolchain",
-  "haskell_proto_library"
+    "@rules_haskell//haskell:protobuf.bzl",
+    "haskell_proto_toolchain",
 )
 
+package(default_visibility = ["//visibility:public"])
+
 haskell_proto_toolchain(
-  name = "protobuf-toolchain",
-  plugin = "@proto-lens-protoc",
-  protoc = "@com_google_protobuf//:protoc",
-  tags = [
-    "requires_proto",
-  ],
-  deps = [
-    "@stackage//:base",
-    "@stackage//:bytestring",
-    "@stackage//:containers",
-    "@stackage//:data-default-class",
-    "@stackage//:deepseq",
-    "@stackage//:lens-family",
-    "@stackage//:lens-family-core",
-    "@stackage//:mtl",
-    "@stackage//:proto-lens",
-    "@stackage//:proto-lens-runtime",
-    "@stackage//:text",
-    "@stackage//:vector",
-  ],
+    name = "protobuf-toolchain",
+    plugin = "@proto-lens-protoc",
+    protoc = "@com_google_protobuf//:protoc",
+    tags = [
+        "requires_proto",
+    ],
+    deps = [
+        "@stackage//:base",
+        "@stackage//:bytestring",
+        "@stackage//:containers",
+        "@stackage//:data-default-class",
+        "@stackage//:deepseq",
+        "@stackage//:lens-family",
+        "@stackage//:lens-family-core",
+        "@stackage//:mtl",
+        "@stackage//:proto-lens",
+        "@stackage//:proto-lens-runtime",
+        "@stackage//:text",
+        "@stackage//:vector",
+    ],
 )

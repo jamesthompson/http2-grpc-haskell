@@ -1,14 +1,14 @@
 load("@rules_haskell//haskell:defs.bzl", "haskell_library")
 
 haskell_library(
-  name = "grpc_types",
-  srcs = glob(["src/**/*.hs"]),
-  deps = [
-    "@stackage//:base",
-    "@stackage//:binary",
-    "@stackage//:bytestring",
-    "@stackage//:case-insensitive",
-    "@stackage//:zlib",
-  ],
-  visibility = ["//visibility:public"],
+    name = "grpc_types",
+    srcs = glob(["src/**/*.hs"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "@stackage//:base",
+        "@stackage//:binary",
+        "@stackage//:bytestring",
+        "@stackage//:case-insensitive",
+        "@stackage//:zlib",
+    ],
 )

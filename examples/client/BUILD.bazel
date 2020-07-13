@@ -1,17 +1,17 @@
 load("@rules_haskell//haskell:defs.bzl", "haskell_library")
 
 haskell_library(
-  name = "example_client_lib",
-  srcs = [ "GrpcClientExample.hs" ],
-  deps = [
-    "//examples/proto:example_haskell_proto",
-    "//grpc-client:grpc_client",
-    "//grpc-types:grpc_types",
-    "//grpc-proto-lens:grpc_proto_lens",
-    "@http2-client//:http2-client",
-    "@stackage//:base",
-    "@stackage//:proto-lens",
-    "@stackage//:proto-lens-runtime",
-  ],
-  visibility = ["//visibility:public"],
+    name = "example_client_lib",
+    srcs = ["GrpcClientExample.hs"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//examples/proto:example_haskell_proto",
+        "//grpc-client:grpc_client",
+        "//grpc-proto-lens:grpc_proto_lens",
+        "//grpc-types:grpc_types",
+        "@http2-client//:http2-client",
+        "@stackage//:base",
+        "@stackage//:proto-lens",
+        "@stackage//:proto-lens-runtime",
+    ],
 )

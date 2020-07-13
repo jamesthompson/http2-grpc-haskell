@@ -1,20 +1,20 @@
 load("@rules_haskell//haskell:defs.bzl", "haskell_library")
 
 haskell_library(
-  name = "example_server_lib",
-  srcs = [ "GrpcServerExample.hs" ],
-  deps = [
-    "//examples/proto:example_haskell_proto",
-    "//grpc-types:grpc_types",
-    "//grpc-proto-lens:grpc_proto_lens",
-    "//grpc-server:grpc_server",
-    "@stackage//:base",
-    "@stackage//:lens-family",
-    "@stackage//:lens-family-core",
-    "@stackage//:proto-lens",
-    "@stackage//:proto-lens-runtime",
-    "@stackage//:warp",
-    "@stackage//:warp-tls",
-  ],
-  visibility = ["//visibility:public"],
+    name = "example_server_lib",
+    srcs = ["GrpcServerExample.hs"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//examples/proto:example_haskell_proto",
+        "//grpc-proto-lens:grpc_proto_lens",
+        "//grpc-server:grpc_server",
+        "//grpc-types:grpc_types",
+        "@stackage//:base",
+        "@stackage//:lens-family",
+        "@stackage//:lens-family-core",
+        "@stackage//:proto-lens",
+        "@stackage//:proto-lens-runtime",
+        "@stackage//:warp",
+        "@stackage//:warp-tls",
+    ],
 )

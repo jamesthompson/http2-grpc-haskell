@@ -6,6 +6,7 @@ with pkgs;
 
   dev = [
     bazel
+    buildifier
     binutils
     cacert
     fd
@@ -16,10 +17,10 @@ with pkgs;
     nixfmt
     perl
     python3
+    stack
     unzip
     which
     zip
-    openjdk
     hlint
   ];
 
