@@ -169,7 +169,7 @@ close grpc = do
   cancel $ backgroundWindowUpdate $ _grpcClientBackground grpc
   _close $ _grpcClientHttp2Client grpc
 
--- | Run an unary query.
+-- | Run a unary query.
 rawUnary ::
   (GRPCInput r i, GRPCOutput r o) =>
   -- | The RPC to call.
@@ -186,6 +186,30 @@ rawUnary rpc (GrpcClient client authority headers timeout reqCompression respCom
     client
     authority
     hdrs
+    timeout
+    (Encoding reqCompression)
+    (Decoding respCompression)
+    call
+
+-- | Run a unary query with supplemental headers.
+rawUnaryWithExtraHeaders ::
+  (GRPCInput r i, GRPCOutput r o) =>
+  -- | The RPC to call.
+  r ->
+  -- | An initialized client.
+  GrpcClient ->
+  -- | Supplemental headers to append to the configured client set for this unary request
+  [(ByteString, ByteString)] ->
+  -- | The input.
+  i ->
+  ClientIO (Either TooMuchConcurrency (RawReply o))
+rawUnaryWithExtraHeaders rpc (GrpcClient client authority headers timeout reqCompression respCompression _) extraHeaders input = do
+  hdrs <- headers
+  let call = singleRequest rpc input
+  open
+    client
+    authority
+    (hdrs <> extraHeaders)
     timeout
     (Encoding reqCompression)
     (Decoding respCompression)
